@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  repository-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check repository structure
+        run: |
+          test -f README.md
+          test -f .gitignore
+          test -d customer-service
+          test -d points-service
+          test -d redemption-service
+          test -d api-gateway
+          test -d frontend
