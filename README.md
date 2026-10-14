@@ -226,8 +226,7 @@ pointomais/
 │   ├── setup.md
 │   └── ...
 ├── .gitignore
-├── README.md
-└── docker-compose.yml
+└── README.md
 ```
 
 Os diretórios dos componentes ainda em desenvolvimento podem conter apenas `.gitkeep`.
