@@ -108,12 +108,17 @@ Etapas adicionais de CI/CD
 
 ### Etapa 2 — Customer Service
 
-**Próxima etapa**
+**Em andamento**
 
-- [ ] Criar projeto Spring Boot
-- [ ] Configurar Java 21
-- [ ] Configurar Maven
-- [ ] Configurar PostgreSQL
+- [x] Criar projeto Spring Boot
+- [x] Configurar Java 21
+- [x] Configurar Maven Wrapper
+- [x] Configurar Spring Data JPA
+- [x] Configurar Bean Validation
+- [x] Configurar PostgreSQL
+- [x] Executar PostgreSQL com Docker
+- [x] Configurar datasource
+- [x] Validar inicialização do contexto com PostgreSQL
 - [ ] Criar entidade `Customer`
 - [ ] Criar DTOs
 - [ ] Criar repository
@@ -176,8 +181,10 @@ Etapas adicionais de CI/CD
 
 ### Etapa 8 — Infraestrutura
 
-- [ ] Docker
-- [ ] Docker Compose
+**Em andamento**
+
+- [x] Docker
+- [x] Docker Compose
 - [ ] Configuração por ambiente
 - [ ] Health checks
 - [ ] CI/CD ampliado
@@ -226,12 +233,30 @@ pointomais/
 │   ├── setup.md
 │   └── ...
 ├── .gitignore
+├── docker-compose.yml
 └── README.md
 ```
 
 Os diretórios dos componentes ainda em desenvolvimento podem conter apenas `.gitkeep`.
+O `customer-service` já possui a aplicação Spring Boot inicial e sua configuração de acesso ao PostgreSQL.
 
 ## Histórico
+
+### 2026-10-15
+
+Customer Service iniciado.
+
+- Projeto Spring Boot criado.
+- Spring Boot 4.1.1 configurado.
+- Java 21 e Maven Wrapper configurados.
+- Spring Data JPA, Bean Validation e PostgreSQL adicionados.
+- PostgreSQL 18 executado com Docker Compose.
+- Datasource configurado por variáveis de ambiente.
+- Primeiro teste falhou por ausência de configuração do datasource.
+- Problema corrigido sem introduzir banco de teste artificial.
+- Contexto Spring validado com PostgreSQL real.
+- `./mvnw test` concluído com `BUILD SUCCESS`.
+- Processo documentado em `docs/setup.md`.
 
 ### 2026-10-14
 

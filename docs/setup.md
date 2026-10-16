@@ -43,9 +43,10 @@ pointomais/
 ├── frontend/
 ├── docs/
 ├── .gitignore
-├── README.md
-└── docker-compose.yml
+└── README.md
 ```
+
+O `docker-compose.yml` foi introduzido posteriormente, quando o `customer-service` passou a depender de PostgreSQL.
 
 Neste primeiro momento, os diretórios dos serviços ainda não possuem código de aplicação.
 
@@ -400,52 +401,206 @@ Esse aviso também não causou falha no workflow.
 
 Esses avisos serão reavaliados quando o pipeline for ampliado.
 
-## 18. Estado atual
+## 18. Implementação inicial do customer-service
+
+A segunda etapa de desenvolvimento começou com a geração do `customer-service` através do Spring Initializr.
+
+### 18.1 Spring Boot
+
+A primeira tentativa utilizou a versão `3.5.6`, mas o Spring Initializr retornou erro informando que a faixa de compatibilidade disponível exigia Spring Boot `4.0.0` ou superior.
+
+A versão padrão informada pelo metadata do Initializr foi `4.1.1.RELEASE`. Entretanto, a versão publicada no Maven Central corresponde a `4.1.1`.
+
+O `pom.xml` foi ajustado para:
+
+```xml
+<version>4.1.1</version>
+```
+
+O projeto foi configurado com:
+
+- Java 21;
+- Spring Boot 4.1.1;
+- Spring Web MVC;
+- Spring Data JPA;
+- Bean Validation;
+- PostgreSQL;
+- dependências de teste geradas pelo Spring Boot.
+
+### 18.2 Primeiro teste — falha de datasource
+
+Após a geração do projeto, o primeiro:
+
+```bash
+./mvnw test
+```
+
+falhou durante a inicialização do contexto Spring.
+
+A causa foi a ausência de configuração do datasource. O projeto possuía JPA e o driver PostgreSQL, mas ainda não informava ao Spring Boot qual banco deveria ser utilizado.
+
+A decisão foi não introduzir H2 apenas para fazer o teste passar. Como PostgreSQL já faz parte da arquitetura definida, o ambiente deveria ser configurado com PostgreSQL real.
+
+### 18.3 PostgreSQL com Docker
+
+Foi criado o `docker-compose.yml` na raiz do projeto.
+
+O primeiro serviço de infraestrutura é:
+
+```text
+customer-db
+```
+
+utilizando:
+
+```text
+postgres:18
+```
+
+Configuração inicial:
+
+```text
+Banco:     customer_db
+Usuário:   pointomais
+Porta:     5432
+```
+
+Os dados são persistidos no volume:
+
+```text
+pointomais_customer-db-data
+```
+
+O banco foi iniciado com:
+
+```bash
+docker compose up -d customer-db
+```
+
+A execução foi validada com:
+
+```bash
+docker compose ps
+```
+
+e:
+
+```bash
+docker compose exec customer-db pg_isready -U pointomais -d customer_db
+```
+
+Resultado:
+
+```text
+/var/run/postgresql:5432 - accepting connections
+```
+
+Os logs também confirmaram:
+
+```text
+database system is ready to accept connections
+```
+
+### 18.4 Configuração do datasource
+
+O `customer-service` passou a utilizar:
+
+```properties
+spring.datasource.url=${DB_URL:jdbc:postgresql://localhost:5432/customer_db}
+spring.datasource.username=${DB_USERNAME:pointomais}
+spring.datasource.password=${DB_PASSWORD:pointomais_dev}
+```
+
+As variáveis de ambiente permitem substituir os valores padrão de desenvolvimento sem alterar o código versionado.
+Os valores padrão (`localhost`, `pointomais` e `pointomais_dev`) são destinados exclusivamente ao ambiente local de desenvolvimento. Em outros ambientes, as credenciais devem ser fornecidas por configuração externa, sem serem incorporadas ao código.
+
+Também foi configurado:
+
+```properties
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.open-in-view=false
+```
+
+### 18.5 Segundo teste — sucesso
+
+Após a configuração do PostgreSQL, o comando:
+
+```bash
+./mvnw test
+```
+
+foi executado novamente.
+
+Resultado:
+
+```text
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+Isso confirmou a integração inicial entre Spring Boot, JPA, driver PostgreSQL e o PostgreSQL executado em Docker.
+
+## 19. Estado atual
 
 Neste ponto, o projeto possui:
 
 ```text
 ✓ Repositório Git local
 ✓ Branch main
-✓ README inicial
+✓ README
 ✓ .gitignore
 ✓ Estrutura inicial de diretórios
 ✓ GitHub remoto
 ✓ GitHub Actions
-✓ Primeiro CI executando com sucesso
+✓ CI inicial executando com sucesso
+✓ customer-service criado
+✓ Java 21
+✓ Spring Boot 4.1.1
+✓ Maven Wrapper
+✓ Spring Data JPA
+✓ Bean Validation
+✓ PostgreSQL
+✓ PostgreSQL executando em Docker
+✓ Configuração do datasource
+✓ Teste de contexto executando com sucesso
 ```
 
 Ainda não foram implementados:
 
 ```text
-□ customer-service
+□ entidade Customer
+□ DTOs
+□ repository
+□ service
+□ controller
+□ validações de negócio
+□ tratamento de exceções
+□ suíte de testes do domínio
+□ JaCoCo
+□ regra de cobertura de 90%
 □ points-service
 □ redemption-service
 □ api-gateway
 □ frontend
-□ PostgreSQL
-□ testes automatizados
-□ JaCoCo
-□ regra de cobertura de 90%
-□ Docker
+□ comunicação entre serviços
 □ autenticação
 □ mensageria
+□ observabilidade
 ```
 
-## 19. Próxima etapa
+## 20. Próxima etapa
 
-A próxima etapa será implementar o `customer-service` utilizando:
+A próxima etapa será implementar o domínio inicial do `customer-service`, começando pela entidade `Customer` e evoluindo gradualmente para:
 
-- Java 21;
-- Spring Boot;
-- Maven;
-- Spring Web;
-- Spring Data JPA;
-- PostgreSQL;
-- Bean Validation;
-- JUnit 5;
-- Mockito;
-- JaCoCo.
+- DTOs;
+- repository;
+- service;
+- controller;
+- validações;
+- tratamento de exceções;
+- testes unitários e de integração;
+- JaCoCo;
+- regra de cobertura mínima de 90%.
 
 A cobertura mínima de 90% será incorporada ao processo de build desde o início.
 
